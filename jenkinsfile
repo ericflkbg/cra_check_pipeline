@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/ericflkbg/OpenPLC_v3.git'
+                git branch: 'master', url: 'https://github.com/ericflkbg/OpenPLC_v3.git'
                 script {
                     sh 'ls -la'
                 }
