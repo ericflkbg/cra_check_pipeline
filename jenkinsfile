@@ -1,35 +1,33 @@
 pipeline {
-    agent any 
-    triggers {
-        pollSCM '* * * * *'
+    agent any  // Läuft auf einem beliebigen verfügbaren Agenten
+
+    environment {
+        IMAGE_NAME = "openplc"
+        IMAGE_TAG = "latest"
     }
+
     stages {
-        stage('Build') {
+        stage('Checkout Code') {
             steps {
-                echo "Building.."
-                sh '''
-                cd myapp
-                pip install -r requirements.txt
-                '''
+                git branch: 'main', url: 'https://github.com/ericflkbg/OpenPLC_v3.git'
             }
         }
-        stage('Test') {
+
+        stage('Build Docker Image') {
             steps {
-                echo "Testing.."
-                sh '''
-                cd myapp
-                python3 hello.py
-                python3 hello.py --name=Brad
-                '''
+                script {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                }
             }
+        } // Schließende Klammer für den 'Build Docker Image' stage
+    }
+
+    post {
+        always {
+            echo "Pipeline abgeschlossen!"
         }
-        stage('Deliver') {
-            steps {
-                echo 'Deliver....'
-                sh '''
-                echo "doing delivery stuff.."
-                '''
-            }
+        failure {
+            echo "Pipeline fehlgeschlagen!"
         }
     }
 }
