@@ -17,9 +17,9 @@ pipeline {
                     if (!isRunning) {
                         echo "Starting Trivy server..."
                         sh """
-                        sudo docker stop ${TRIVY_SERVER_NAME} || true
-                        sudo docker rm ${TRIVY_SERVER_NAME} || true
-                        sudo docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
+                        docker stop ${TRIVY_SERVER_NAME} || true
+                        docker rm ${TRIVY_SERVER_NAME} || true
+                        docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
                         -v /var/lib/trivy:/root/.cache/trivy \
                         -p ${TRIVY_SERVER_PORT}:${TRIVY_SERVER_PORT} \
                         aquasec/trivy server --listen 0.0.0.0:${TRIVY_SERVER_PORT}
