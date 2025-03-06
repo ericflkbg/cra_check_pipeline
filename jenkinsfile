@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "openplc"
         IMAGE_TAG = "latest"
-        TRIVY_SERVER = "http://trivy-server:4954"
+        TRIVY_SERVER = "http://172.18.0.3:4954"
     }
 
     stages {
