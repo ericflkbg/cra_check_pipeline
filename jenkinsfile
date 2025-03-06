@@ -1,9 +1,10 @@
 pipeline {
-    agent any  // Läuft auf einem beliebigen verfügbaren Agenten
+    agent any  
 
     environment {
         IMAGE_NAME = "openplc"
         IMAGE_TAG = "latest"
+        TRIVY_SERVER = "http://trivy-server:4954"
     }
 
     stages {
@@ -22,7 +23,19 @@ pipeline {
                     sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
-        } // Schließende Klammer für den 'Build Docker Image' stage
+        }
+
+        stage('Scan Docker Image') {
+            steps {
+                script {
+                    echo "Scanning Docker image ${IMAGE_NAME}:${IMAGE_TAG} with Trivy..."
+                    sh """
+                    docker run --rm --network jenkins aquasec/trivy image --server ${TRIVY_SERVER} \
+                    --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
     }
 
     post {
