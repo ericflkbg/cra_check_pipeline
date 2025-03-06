@@ -2,18 +2,48 @@ pipeline {
     agent any
 
     environment {
-        TRIVY_SERVER_NAME = "trivy-server"
         DOCKER_NETWORK = "jenkins"
+        HARBOR_CONTAINER_NAME = "harbor-registry"
+        HARBOR_PORT = "8082"
+        HARBOR_URL = "http://${HARBOR_CONTAINER_NAME}:${HARBOR_PORT}"
+        TRIVY_SERVER_NAME = "trivy-server"
         TRIVY_SERVER_PORT = "4954"
+        TRIVY_SERVER_URL = "http://${TRIVY_SERVER_NAME}:${TRIVY_SERVER_PORT}"
     }
 
     stages {
+        stage('Start Harbor Registry') {
+            steps {
+                script {
+                    echo "Checking if Harbor is already running..."
+                    def isRunning = sh(script: "docker ps -q -f name=${HARBOR_CONTAINER_NAME}", returnStdout: true).trim()
+
+                    if (!isRunning) {
+                        echo "Starting Harbor container..."
+                        sh """
+                        docker stop ${HARBOR_CONTAINER_NAME} || true
+                        docker rm ${HARBOR_CONTAINER_NAME} || true
+                        docker run -d --name ${HARBOR_CONTAINER_NAME} --network ${DOCKER_NETWORK} \
+                        -p ${HARBOR_PORT}:80 \
+                        goharbor/harbor-core:v2.8.0
+                        """
+                        sleep 15 
+                    } else {
+                        echo "Harbor is already running!"
+                    }
+
+                    echo "Checking Harbor health..."
+                    sh "curl -s ${HARBOR_URL} || (echo 'Harbor health check failed!' && exit 1)"
+                }
+            }
+        }
+
         stage('Start Trivy Server') {
             steps {
                 script {
                     echo "Checking if Trivy server is already running..."
                     def isRunning = sh(script: "docker ps -q -f name=${TRIVY_SERVER_NAME}", returnStdout: true).trim()
-                    
+
                     if (!isRunning) {
                         echo "Starting Trivy server..."
                         sh """
@@ -24,14 +54,13 @@ pipeline {
                         -p ${TRIVY_SERVER_PORT}:${TRIVY_SERVER_PORT} \
                         aquasec/trivy server --listen 0.0.0.0:${TRIVY_SERVER_PORT}
                         """
-                        sleep 10 // Warten, damit der Server startet
+                        sleep 10 
                     } else {
                         echo "Trivy server is already running!"
                     }
-                    
-                    // Prüfe die Trivy-Server-Verfügbarkeit
+
                     echo "Checking Trivy server health..."
-                    sh "curl -s http://trivy-server:4954/healthz || (echo 'Trivy server health check failed!' && exit 1)"
+                    sh "curl -s ${TRIVY_SERVER_URL}/healthz || (echo 'Trivy server health check failed!' && exit 1)"
                 }
             }
         }
@@ -39,10 +68,10 @@ pipeline {
 
     post {
         always {
-            echo "Trivy Server Setup abgeschlossen!"
+            echo "Harbor & Trivy Setup abgeschlossen!"
         }
         failure {
-            echo "Fehler beim Starten des Trivy-Servers!"
+            echo "Fehler beim Starten der Dienste!"
         }
     }
 }
