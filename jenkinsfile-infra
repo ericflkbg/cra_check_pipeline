@@ -54,7 +54,7 @@ pipeline {
                         -v harbor_registry:/data/registry \
                         -v harbor_db:/data/database \
                         -v harbor_logs:/var/log/harbor \
-                        goharbor/harbor-core:latest
+                        goharbor/harbor-core:v2.4.0
                     else
                         echo "Harbor is already running!"
                     fi
