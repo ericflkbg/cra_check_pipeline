@@ -37,6 +37,8 @@ pipeline {
                         echo "Trivy is already running!"
                     fi
                     """
+                    echo "Trivy server logs:"
+                    sh "docker logs ${TRIVY_SERVER_NAME}"
                 }
             }
         }
@@ -59,6 +61,8 @@ pipeline {
                         echo "Harbor is already running!"
                     fi
                     """
+                    echo "Harbor registry logs:"
+                    sh "docker logs ${HARBOR_NAME}"
                 }
             }
         }
