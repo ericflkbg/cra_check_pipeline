@@ -3,40 +3,35 @@ pipeline {
 
     environment {
         TRIVY_SERVER_NAME = "trivy-server"
-        HARBOR_NAME = "harbor-registry"
-        HARBOR_PORT = "8082"
-        HARBOR_URL = "http://localhost:${HARBOR_PORT}"
         DOCKER_NETWORK = "jenkins"
+        TRIVY_SERVER_PORT = "4954"
     }
 
     stages {
-        stage('Setup Docker Network') {
-            steps {
-                script {
-                    echo "Ensuring Docker network '${DOCKER_NETWORK}' exists..."
-                    sh "docker network inspect ${DOCKER_NETWORK} || docker network create ${DOCKER_NETWORK}"
-                }
-            }
-        }
-
         stage('Start Trivy Server') {
             steps {
                 script {
-                    echo "Checking if Trivy is already running..."
-                    sh """
-                    if [ ! "\$(docker ps -q -f name=${TRIVY_SERVER_NAME})" ]; then
+                    echo "Checking if Trivy server is already running..."
+                    def isRunning = sh(script: "docker ps -q -f name=${TRIVY_SERVER_NAME}", returnStdout: true).trim()
+                    
+                    if (!isRunning) {
                         echo "Starting Trivy server..."
-                        docker rm -f ${TRIVY_SERVER_NAME} || true
-                        docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
+                        sh """
+                        sudo docker stop ${TRIVY_SERVER_NAME} || true
+                        sudo docker rm ${TRIVY_SERVER_NAME} || true
+                        sudo docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
                         -v /var/lib/trivy:/root/.cache/trivy \
-                        -p 4954:4954 \
-                        aquasec/trivy server --listen 0.0.0.0:4954
-                    else
-                        echo "Trivy is already running!"
-                    fi
-                    """
-                    echo "Trivy server logs:"
-                    sh "docker logs ${TRIVY_SERVER_NAME}"
+                        -p ${TRIVY_SERVER_PORT}:${TRIVY_SERVER_PORT} \
+                        aquasec/trivy server --listen 0.0.0.0:${TRIVY_SERVER_PORT}
+                        """
+                        sleep 10 // Warten, damit der Server startet
+                    } else {
+                        echo "Trivy server is already running!"
+                    }
+                    
+                    // Prüfe die Trivy-Server-Verfügbarkeit
+                    echo "Checking Trivy server health..."
+                    sh "curl -s http://trivy-server:4954/healthz || (echo 'Trivy server health check failed!' && exit 1)"
                 }
             }
         }
@@ -44,7 +39,10 @@ pipeline {
 
     post {
         always {
-            echo "Infrastructure setup completed!"
+            echo "Trivy Server Setup abgeschlossen!"
+        }
+        failure {
+            echo "Fehler beim Starten des Trivy-Servers!"
         }
     }
 }
