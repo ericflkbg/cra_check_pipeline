@@ -3,8 +3,6 @@ pipeline {
 
     environment {
         TRIVY_SERVER_NAME = "trivy-server"
-        TRIVY_SERVER_PORT = "8081"
-        TRIVY_SERVER_URL = "http://localhost:${TRIVY_SERVER_PORT}"
         HARBOR_NAME = "harbor-registry"
         HARBOR_PORT = "8082"
         HARBOR_URL = "http://localhost:${HARBOR_PORT}"
@@ -30,7 +28,6 @@ pipeline {
                         echo "Starting Trivy server..."
                         docker rm -f ${TRIVY_SERVER_NAME} || true
                         docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
-                        -p ${TRIVY_SERVER_PORT}:8080 \
                         -v /var/lib/trivy:/root/.cache/trivy \
                         aquasec/trivy server --listen 0.0.0.0:8080
                     else
@@ -42,31 +39,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Start Harbor Registry') {
-            steps {
-                script {
-                    echo "Checking if Harbor is already running..."
-                    sh """
-                    if [ ! "\$(docker ps -q -f name=${HARBOR_NAME})" ]; then
-                        echo "Starting Harbor with persistent storage..."
-                        docker rm -f ${HARBOR_NAME} || true
-                        docker run -d --name ${HARBOR_NAME} --network ${DOCKER_NETWORK} \
-                        -p ${HARBOR_PORT}:8080 \
-                        -v harbor_registry:/data/registry \
-                        -v harbor_db:/data/database \
-                        -v harbor_logs:/var/log/harbor \
-                        goharbor/harbor-core:v2.4.0
-                    else
-                        echo "Harbor is already running!"
-                    fi
-                    """
-                    echo "Harbor registry logs:"
-                    sh "docker logs ${HARBOR_NAME}"
-                }
-            }
-        }
-    }
 
     post {
         always {
