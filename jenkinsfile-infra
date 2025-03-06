@@ -29,7 +29,8 @@ pipeline {
                         docker rm -f ${TRIVY_SERVER_NAME} || true
                         docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
                         -v /var/lib/trivy:/root/.cache/trivy \
-                        aquasec/trivy server --listen 0.0.0.0:8080
+                        -p 4954:4954 \
+                        aquasec/trivy server
                     else
                         echo "Trivy is already running!"
                     fi
@@ -39,6 +40,7 @@ pipeline {
                 }
             }
         }
+    }
 
     post {
         always {
