@@ -30,7 +30,9 @@ pipeline {
                 script {
                     echo "Scanning Docker image ${IMAGE_NAME}:${IMAGE_TAG} with Trivy..."
                     sh """
-                    docker run --rm --network jenkins aquasec/trivy image --server ${TRIVY_SERVER} \
+                    docker run --rm --network jenkins \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    aquasec/trivy image --server ${TRIVY_SERVER} \
                     --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
