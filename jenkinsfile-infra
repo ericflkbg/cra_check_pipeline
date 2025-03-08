@@ -48,23 +48,14 @@ pipeline {
         stage('Start Nexus') {
             steps {
                 script {
-                    echo "Checking if Nexus is already running..."
-                    def nexusRunning = sh(script: "docker ps -q -f name=${NEXUS_NAME}", returnStdout: true).trim()
-
-                    if (!nexusRunning) {
-                        echo "Starting Nexus container..."
-                        sh """
-                        docker stop ${NEXUS_NAME} || true
-                        docker rm ${NEXUS_NAME} || true
-                        docker run -d --name ${NEXUS_NAME} --network ${DOCKER_NETWORK} \
-                        -p ${NEXUS_PORT}:8081 \
-                        -v nexus-data:/nexus-data \
-                        sonatype/nexus3
-                        """
-                        sleep 120 // Erhöhen der Wartezeit auf 120 Sekunden
-                    } else {
-                        echo "Nexus is already running!"
-                    }
+                    echo "Starting Nexus container..."
+                    sh """
+                    docker run -d --name ${NEXUS_NAME} --network ${DOCKER_NETWORK} \
+                    -p ${NEXUS_PORT}:8081 \
+                    -v nexus-data:/nexus-data \
+                    sonatype/nexus3
+                    """
+                    sleep 60
                 }
             }
         }
