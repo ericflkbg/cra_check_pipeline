@@ -8,6 +8,7 @@ pipeline {
         NEXUS_DB_VOLUME = "nexus-db"
         NEXUS_NAME = "nexus"
         NEXUS_PORT = "8081"
+        NEXUS_URL = "http://${NEXUS_NAME}:${NEXUS_PORT}/service/rest/v1/status"
         TRIVY_SERVER_NAME = "trivy-server"
         TRIVY_SERVER_PORT = "4954"
         TRIVY_SERVER_URL = "http://${TRIVY_SERVER_NAME}:${TRIVY_SERVER_PORT}"
@@ -18,9 +19,9 @@ pipeline {
             steps {
                 script {
                     echo "Checking if Nexus Database is already running..."
-                    def isRunning = sh(script: "docker ps -q -f name=${NEXUS_DB_NAME}", returnStdout: true).trim()
+                    def dbRunning = sh(script: "docker ps -q -f name=${NEXUS_DB_NAME}", returnStdout: true).trim()
 
-                    if (!isRunning) {
+                    if (!dbRunning) {
                         echo "Starting Nexus Database container..."
                         sh """
                         docker stop ${NEXUS_DB_NAME} || true
@@ -48,9 +49,9 @@ pipeline {
             steps {
                 script {
                     echo "Checking if Nexus is already running..."
-                    def isRunning = sh(script: "docker ps -q -f name=${NEXUS_NAME}", returnStdout: true).trim()
+                    def nexusRunning = sh(script: "docker ps -q -f name=${NEXUS_NAME}", returnStdout: true).trim()
 
-                    if (!isRunning) {
+                    if (!nexusRunning) {
                         echo "Starting Nexus container..."
                         sh """
                         docker stop ${NEXUS_NAME} || true
@@ -64,14 +65,19 @@ pipeline {
                     } else {
                         echo "Nexus is already running!"
                     }
+                }
+            }
+        }
 
-                    echo "Checking Nexus health..."
-                    timeout(time: 180, unit: 'SECONDS') {
+        stage('Wait for Nexus') {
+            steps {
+                script {
+                    echo "Waiting for Nexus to become available..."
+                    timeout(time: 180, unit: 'SECONDS') { // Warte maximal 3 Minuten
                         waitUntil {
-                            def nexusReady = sh(script: """
-                                curl -s -o /dev/null -w '%{http_code}' http://nexus:${NEXUS_PORT}/service/rest/v1/status | grep 200
-                            """, returnStatus: true)
-                            return (nexusReady == 0)
+                            def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${NEXUS_URL}", returnStdout: true).trim()
+                            echo "Nexus Health Check Status: ${response}"
+                            return response == "200"
                         }
                     }
                 }
