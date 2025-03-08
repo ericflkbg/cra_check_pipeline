@@ -48,23 +48,14 @@ pipeline {
         stage('Start Nexus') {
             steps {
                 script {
-                    echo "Checking if Nexus is already running..."
-                    def nexusRunning = sh(script: "docker ps -q -f name=${NEXUS_NAME}", returnStdout: true).trim()
-
-                    if (!nexusRunning) {
-                        echo "Starting Nexus container..."
-                        sh """
-                        docker stop ${NEXUS_NAME} || true
-                        docker rm ${NEXUS_NAME} || true
-                        docker run -d --name ${NEXUS_NAME} --network ${DOCKER_NETWORK} \
-                        -p ${NEXUS_PORT}:8081 \
-                        -v nexus-data:/nexus-data \
-                        sonatype/nexus3
-                        """
-                        sleep 120 // Erhöhen der Wartezeit auf 120 Sekunden
-                    } else {
-                        echo "Nexus is already running!"
-                    }
+                    echo "Starting Nexus container..."
+                    sh """
+                    docker run -d --name ${NEXUS_NAME} --network ${DOCKER_NETWORK} \
+                    -p ${NEXUS_PORT}:8081 \
+                    -v nexus-data:/nexus-data \
+                    sonatype/nexus3
+                    """
+                    sleep 120 // Erhöhen der Wartezeit auf 120 Sekunden
                 }
             }
         }
@@ -75,7 +66,7 @@ pipeline {
                     echo "Waiting for Nexus to become available..."
                     timeout(time: 180, unit: 'SECONDS') { // Warte maximal 3 Minuten
                         waitUntil {
-                            def response = sh(script: "curl -v -s -o /dev/null -w '%{http_code}' ${NEXUS_URL}", returnStdout: true).trim()
+                            def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${NEXUS_URL}", returnStdout: true).trim()
                             echo "Nexus Health Check Status: ${response}"
                             return response == "200"
                         }
