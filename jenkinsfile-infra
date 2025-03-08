@@ -34,7 +34,7 @@ pipeline {
                         -v ${NEXUS_DB_VOLUME}:/var/lib/postgresql/data \
                         postgres:13
                         """
-                        sleep 30
+                        sleep 60
                     } else {
                         echo "Nexus Database is already running!"
                     }
@@ -61,7 +61,7 @@ pipeline {
                         -v nexus-data:/nexus-data \
                         sonatype/nexus3
                         """
-                        sleep 60
+                        sleep 120 // Erhöhen der Wartezeit auf 120 Sekunden
                     } else {
                         echo "Nexus is already running!"
                     }
@@ -73,9 +73,9 @@ pipeline {
             steps {
                 script {
                     echo "Waiting for Nexus to become available..."
-                    timeout(time: 180, unit: 'SECONDS') { 
+                    timeout(time: 180, unit: 'SECONDS') { // Warte maximal 3 Minuten
                         waitUntil {
-                            def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${NEXUS_URL}", returnStdout: true).trim()
+                            def response = sh(script: "curl -v -s -o /dev/null -w '%{http_code}' ${NEXUS_URL}", returnStdout: true).trim()
                             echo "Nexus Health Check Status: ${response}"
                             return response == "200"
                         }
