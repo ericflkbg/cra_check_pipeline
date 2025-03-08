@@ -60,13 +60,15 @@ pipeline {
                         -v nexus-data:/nexus-data \
                         sonatype/nexus3
                         """
-                        sleep 60
+                        sleep 120 // Erhöhen der Wartezeit auf 120 Sekunden
                     } else {
                         echo "Nexus is already running!"
                     }
 
                     echo "Checking Nexus health..."
-                    sh "curl -s -o /dev/null -w '%{http_code}' http://localhost:${NEXUS_PORT}/service/rest/v1/status | grep 200 || (echo 'Nexus health check failed!' && exit 1)"
+                    sh """
+                    curl -v -s -o /dev/null -w '%{http_code}' http://localhost:${NEXUS_PORT}/service/rest/v1/status | grep 200 || (echo 'Nexus health check failed!' && exit 1)
+                    """
                 }
             }
         }
