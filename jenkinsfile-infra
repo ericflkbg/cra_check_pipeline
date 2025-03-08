@@ -67,10 +67,14 @@ pipeline {
                     }
 
                     echo "Checking Nexus health..."
-                    // Auskommentieren des fehlerhaften Healthchecks
-                    // sh """
-                    // curl -v -s -o /dev/null -w '%{http_code}' http://${NEXUS_IP}:${NEXUS_PORT}/service/rest/v1/status | grep 200 || (echo 'Nexus health check failed!' && exit 1)
-                    // """
+                    timeout(time: 180, unit: 'SECONDS') {
+                        waitUntil {
+                            def nexusReady = sh(script: """
+                                curl -s -o /dev/null -w '%{http_code}' http://${NEXUS_IP}:${NEXUS_PORT}/service/rest/v1/status | grep 200
+                            """, returnStatus: true)
+                            return (nexusReady == 0)
+                        }
+                    }
                 }
             }
         }
