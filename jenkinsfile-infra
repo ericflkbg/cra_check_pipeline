@@ -33,7 +33,7 @@ pipeline {
                         -v ${NEXUS_DB_VOLUME}:/var/lib/postgresql/data \
                         postgres:13
                         """
-                        sleep 15
+                        sleep 60
                     } else {
                         echo "Nexus Database is already running!"
                     }
