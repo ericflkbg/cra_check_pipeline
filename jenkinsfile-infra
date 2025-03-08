@@ -3,38 +3,70 @@ pipeline {
 
     environment {
         DOCKER_NETWORK = "jenkins"
-        REGISTRY_CONTAINER_NAME = "registry"
-        REGISTRY_PORT = "5000"
-        REGISTRY_URL = "http://${REGISTRY_CONTAINER_NAME}:${REGISTRY_PORT}"
+        NEXUS_DB_NAME = "nexus-db"
+        NEXUS_DB_PORT = "5433"
+        NEXUS_DB_VOLUME = "nexus-db"
+        NEXUS_NAME = "nexus"
+        NEXUS_PORT = "8081"
         TRIVY_SERVER_NAME = "trivy-server"
         TRIVY_SERVER_PORT = "4954"
         TRIVY_SERVER_URL = "http://${TRIVY_SERVER_NAME}:${TRIVY_SERVER_PORT}"
     }
 
     stages {
-        stage('Start Docker Registry') {
+        stage('Start Nexus Database') {
             steps {
                 script {
-                    echo "Checking if Docker Registry is already running..."
-                    def isRunning = sh(script: "docker ps -q -f name=${REGISTRY_CONTAINER_NAME}", returnStdout: true).trim()
+                    echo "Checking if Nexus Database is already running..."
+                    def isRunning = sh(script: "docker ps -q -f name=${NEXUS_DB_NAME}", returnStdout: true).trim()
 
                     if (!isRunning) {
-                        echo "Starting Docker Registry container..."
+                        echo "Starting Nexus Database container..."
                         sh """
-                        docker stop ${REGISTRY_CONTAINER_NAME} || true
-                        docker rm ${REGISTRY_CONTAINER_NAME} || true
-                        docker run -d --name ${REGISTRY_CONTAINER_NAME} --network ${DOCKER_NETWORK} \
-                        -p ${REGISTRY_PORT}:${REGISTRY_PORT} \
-                        -v /var/lib/registry:/var/lib/registry \
-                        registry:2
+                        docker stop ${NEXUS_DB_NAME} || true
+                        docker rm ${NEXUS_DB_NAME} || true
+                        docker run -d --name ${NEXUS_DB_NAME} --network ${DOCKER_NETWORK} \
+                        -p ${NEXUS_DB_PORT}:5432 \
+                        -e POSTGRES_USER=nexus \
+                        -e POSTGRES_PASSWORD=nexus \
+                        -e POSTGRES_DB=nexus \
+                        -v ${NEXUS_DB_VOLUME}:/var/lib/postgresql/data \
+                        postgres:13
                         """
-                        sleep 15 
+                        sleep 15
                     } else {
-                        echo "Docker Registry is already running!"
+                        echo "Nexus Database is already running!"
                     }
 
-                    echo "Checking Docker Registry health..."
-                    sh "curl -s ${REGISTRY_URL}/v2/ || (echo 'Docker Registry health check failed!' && exit 1)"
+                    echo "Checking Nexus Database health..."
+                    sh "docker exec ${NEXUS_DB_NAME} pg_isready -U nexus || (echo 'Nexus Database health check failed!' && exit 1)"
+                }
+            }
+        }
+
+        stage('Start Nexus') {
+            steps {
+                script {
+                    echo "Checking if Nexus is already running..."
+                    def isRunning = sh(script: "docker ps -q -f name=${NEXUS_NAME}", returnStdout: true).trim()
+
+                    if (!isRunning) {
+                        echo "Starting Nexus container..."
+                        sh """
+                        docker stop ${NEXUS_NAME} || true
+                        docker rm ${NEXUS_NAME} || true
+                        docker run -d --name ${NEXUS_NAME} --network ${DOCKER_NETWORK} \
+                        -p ${NEXUS_PORT}:8081 \
+                        -v nexus-data:/nexus-data \
+                        sonatype/nexus3
+                        """
+                        sleep 20
+                    } else {
+                        echo "Nexus is already running!"
+                    }
+
+                    echo "Checking Nexus health..."
+                    sh "curl -s -o /dev/null -w '%{http_code}' http://localhost:${NEXUS_PORT} | grep 200 || (echo 'Nexus health check failed!' && exit 1)"
                 }
             }
         }
@@ -55,7 +87,7 @@ pipeline {
                         -p ${TRIVY_SERVER_PORT}:${TRIVY_SERVER_PORT} \
                         aquasec/trivy server --listen 0.0.0.0:${TRIVY_SERVER_PORT}
                         """
-                        sleep 10 
+                        sleep 10
                     } else {
                         echo "Trivy server is already running!"
                     }
@@ -69,7 +101,7 @@ pipeline {
 
     post {
         always {
-            echo "Docker Registry & Trivy Setup abgeschlossen!"
+            echo "Nexus, Nexus-DB & Trivy Setup abgeschlossen!"
         }
         failure {
             echo "Fehler beim Starten der Dienste!"
