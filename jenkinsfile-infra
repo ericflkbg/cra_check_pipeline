@@ -66,7 +66,7 @@ pipeline {
                     }
 
                     echo "Checking Nexus health..."
-                    sh "curl -s -o /dev/null -w '%{http_code}' http://localhost:${NEXUS_PORT} | grep 200 || (echo 'Nexus health check failed!' && exit 1)"
+                    sh "curl -s -o /dev/null -w '%{http_code}' http://localhost:${NEXUS_PORT}/service/rest/v1/status | grep 200 || (echo 'Nexus health check failed!' && exit 1)"
                 }
             }
         }
