@@ -60,7 +60,7 @@ pipeline {
                         -v nexus-data:/nexus-data \
                         sonatype/nexus3
                         """
-                        sleep 20
+                        sleep 60
                     } else {
                         echo "Nexus is already running!"
                     }
