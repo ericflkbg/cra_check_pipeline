@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "openplc"
         IMAGE_TAG = "latest"
         TRIVY_SERVER = "http://172.18.0.5:4954"
-        NEXUS_REPO = "172.18.0.4:5000" // Korrigierte IP-Adresse der Nexus-Registry
+        NEXUS_REPO = "172.18.0.4:5000/docker-repo" // Korrigierte IP-Adresse der Nexus-Registry und Repository-Name
     }
 
     stages {
