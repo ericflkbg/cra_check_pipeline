@@ -5,55 +5,45 @@ pipeline {
         IMAGE_NAME = "openplc"
         IMAGE_TAG = "latest"
         TRIVY_SERVER = "http://172.18.0.5:4954"
-        NEXUS_REPO = "localhost:8081/repository/docker-repo" // Korrigierte URL der Nexus-Registry und Repository-Name
+        NEXUS_REPO = "myregistry.local/docker-repo" // Korrigierte URL der Nexus-Registry
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 git branch: 'master', url: 'https://github.com/ericflkbg/OpenPLC_v3.git'
-                script {
-                    sh 'ls -la'
-                }
+                sh 'ls -la'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                }
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('Scan Docker Image') {
             steps {
-                script {
-                    echo "Scanning Docker image ${IMAGE_NAME}:${IMAGE_TAG} with Trivy..."
-                    sh """
-                    docker run --rm --network jenkins \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    aquasec/trivy image --server ${TRIVY_SERVER} \
-                    --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
-                    """
-                }
+                sh """
+                docker run --rm --network jenkins \
+                -v /var/run/docker.sock:/var/run/docker.sock \
+                aquasec/trivy image --server ${TRIVY_SERVER} \
+                --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                """
             }
         }
 
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    echo "Tagging Docker image for Nexus repository..."
                     sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-                    echo "Logging in to Nexus registry..."
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
                         sh """
                         echo ${NEXUS_PASSWORD} | docker login ${NEXUS_REPO} -u ${NEXUS_USERNAME} --password-stdin
                         """
                     }
 
-                    echo "Pushing Docker image to Nexus..."
                     sh "docker push ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
