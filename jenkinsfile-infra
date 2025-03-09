@@ -134,7 +134,7 @@ pipeline {
                     sh '''
                     echo "Sample Report Data" > report.txt
                     docker run --rm --network=host -v $PWD:/data minio/mc alias set myminio http://localhost:9000 admin admin123
-                    docker run --rm --network=host -v $PWD:/data minio/mc cp /data/report.txt myminio/security-artifacts/reports/
+                    docker run --rm --network=host -v $PWD:/data minio/mc cp /data/report.txt myminio/security-artifacts/reports/report.txt
                     '''
                 }
             }
