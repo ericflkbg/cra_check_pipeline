@@ -8,7 +8,7 @@ pipeline {
         NEXUS_DB_VOLUME = "nexus-db"
         NEXUS_NAME = "nexus3"
         NEXUS_PORT = "8081"
-        NEXUS_URL = "http://localhost:${NEXUS_PORT}/service/rest/v1/status"
+        NEXUS_URL = "http://nexus3:${NEXUS_PORT}/service/rest/v1/status" // Anpassung der URL
         TRIVY_SERVER_NAME = "trivy-server"
         TRIVY_SERVER_PORT = "4954"
         TRIVY_SERVER_URL = "http://${TRIVY_SERVER_NAME}:${TRIVY_SERVER_PORT}"
