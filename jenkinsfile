@@ -5,6 +5,7 @@ pipeline {
         IMAGE_NAME = "openplc"
         IMAGE_TAG = "latest"
         TRIVY_SERVER = "http://172.18.0.3:4954"
+        NEXUS_REPO = "172.18.0.4:5000" // Korrigierte IP-Adresse der Nexus-Registry
     }
 
     stages {
@@ -35,6 +36,18 @@ pipeline {
                     aquasec/trivy image --server ${TRIVY_SERVER} \
                     --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
                     """
+                }
+            }
+        }
+
+        stage('Push Docker Image to Nexus') {
+            steps {
+                script {
+                    echo "Tagging Docker image for Nexus repository..."
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
+
+                    echo "Pushing Docker image to Nexus..."
+                    sh "docker push ${NEXUS_REPO}/${IMAGE_NAME}:${IMAGE_TAG}"
                 }
             }
         }
