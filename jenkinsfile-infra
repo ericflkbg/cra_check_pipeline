@@ -15,7 +15,6 @@ pipeline {
     }
 
     stages {
-        /*
         stage('Start Nexus Database') {
             steps {
                 script {
@@ -85,60 +84,6 @@ pipeline {
                 }
             }
         }
-        */
-
-        stage('Start MinIO') {
-            steps {
-                script {
-                    sh '''
-                    docker run -d --name minio \
-                        -p 9000:9000 -p 9090:9090 \
-                        -e "MINIO_ROOT_USER=admin" \
-                        -e "MINIO_ROOT_PASSWORD=admin123" \
-                        -v $PWD/minio-data:/data \
-                        minio/minio server /data --console-address ":9090"
-                    '''
-                }
-            }
-        }
-
-        stage('Wait for MinIO to be ready') {
-            steps {
-                script {
-                    sh '''
-                    echo "Waiting for MinIO..."
-                    sleep 10
-                    '''
-                }
-            }
-        }
-
-        stage('Create Buckets') {
-            steps {
-                script {
-                    sh '''
-                    docker run --rm --network=host minio/mc alias set myminio http://localhost:9000 admin admin123
-                    docker run --rm --network=host minio/mc mb myminio/security-artifacts
-                    docker run --rm --network=host minio/mc mb myminio/security-artifacts/sboms
-                    docker run --rm --network=host minio/mc mb myminio/security-artifacts/trivy-results
-                    docker run --rm --network=host minio/mc mb myminio/security-artifacts/zap-results
-                    docker run --rm --network=host minio/mc mb myminio/security-artifacts/reports
-                    '''
-                }
-            }
-        }
-
-        stage('Upload Sample Report') {
-            steps {
-                script {
-                    sh '''
-                    echo "Sample Report Data" > report.txt
-                    docker run --rm --network=host -v $PWD:/data minio/mc alias set myminio http://localhost:9000 admin admin123
-                    docker run --rm --network=host -v $PWD:/data minio/mc cp /data/report.txt myminio/security-artifacts/reports/report.txt
-                    '''
-                }
-            }
-        }
 
         stage('Start Trivy Server') {
             steps {
@@ -170,7 +115,7 @@ pipeline {
 
     post {
         always {
-            echo "MinIO Setup abgeschlossen!"
+            echo "Nexus, Nexus-DB & Trivy Setup abgeschlossen!"
         }
         failure {
             echo "Fehler beim Starten der Dienste!"
