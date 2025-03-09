@@ -6,9 +6,9 @@ pipeline {
         NEXUS_DB_NAME = "nexus-db"
         NEXUS_DB_PORT = "5433"
         NEXUS_DB_VOLUME = "nexus-db"
-        NEXUS_NAME = "nexus"
+        NEXUS_NAME = "nexus3"
         NEXUS_PORT = "8081"
-        NEXUS_URL = "http://${NEXUS_NAME}:${NEXUS_PORT}/service/rest/v1/status"
+        NEXUS_URL = "http://localhost:${NEXUS_PORT}/service/rest/v1/status"
         TRIVY_SERVER_NAME = "trivy-server"
         TRIVY_SERVER_PORT = "4954"
         TRIVY_SERVER_URL = "http://${TRIVY_SERVER_NAME}:${TRIVY_SERVER_PORT}"
@@ -57,8 +57,10 @@ pipeline {
                         sh """
                         docker stop ${NEXUS_NAME} || echo 'Nexus was not running'
                         docker rm ${NEXUS_NAME} || echo 'Nexus was not existing'
-                        docker run -d --name ${NEXUS_NAME} --network ${DOCKER_NETWORK} \
-                        -p ${NEXUS_PORT}:8081 -p 5000:5000 \
+                        docker run -d --name ${NEXUS_NAME} \
+                        -p 8081:8081 \
+                        -p 8082:8082 \
+                        -p 8083:8083 \
                         -v nexus-data:/nexus-data \
                         sonatype/nexus3
                         """
