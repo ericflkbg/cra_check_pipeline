@@ -48,7 +48,9 @@ pipeline {
 
                     echo "Logging in to Nexus registry..."
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                        sh "docker login ${NEXUS_REPO} -u ${NEXUS_USERNAME} -p ${NEXUS_PASSWORD}"
+                        sh """
+                        echo ${NEXUS_PASSWORD} | docker login ${NEXUS_REPO} -u ${NEXUS_USERNAME} --password-stdin
+                        """
                     }
 
                     echo "Pushing Docker image to Nexus..."
