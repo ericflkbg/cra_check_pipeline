@@ -11,7 +11,7 @@ pipeline {
         NEXUS_URL = "https://myregistry.local/service/rest/v1/status" // Anpassung der URL
         TRIVY_SERVER_NAME = "trivy-server"
         TRIVY_SERVER_PORT = "4954"
-        TRIVY_SERVER_URL = "http://${TRIVY_SERVER_NAME}:${TRIVY_SERVER_PORT}"
+        TRIVY_SERVER_URL = "http://172.18.0.4:${TRIVY_SERVER_PORT}" // Aktualisierte IP-Adresse des Trivy-Servers
     }
 
     stages {
