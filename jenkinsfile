@@ -121,7 +121,8 @@ pipeline {
                 script {
                     echo "Creating Prometheus configuration..."
                     sh '''
-                    cat <<EOF > prometheus.yml
+                    mkdir -p prometheus
+                    cat <<EOF > prometheus/prometheus.yml
 global:
   scrape_interval: 5s
 scrape_configs:
@@ -136,7 +137,7 @@ EOF
                     docker stop prometheus || true
                     docker rm prometheus || true
                     docker run -d --name prometheus --network=live-network \
-                      -p 9091:9090 -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+                      -p 9091:9090 -v $(pwd)/prometheus:/etc/prometheus \
                       prom/prometheus
                     '''
                 }
