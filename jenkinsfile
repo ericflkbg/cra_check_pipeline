@@ -19,8 +19,11 @@ pipeline {
         stage('Lint Dockerfile') {
             steps {
                 script {
+                    echo "Checking if Dockerfile exists..."
+                    sh 'ls -la Dockerfile || echo "Dockerfile not found!"'
+
                     echo "Running Hadolint to check Dockerfile..."
-                    sh 'docker run --rm -v $PWD/Dockerfile:/Dockerfile hadolint/hadolint /Dockerfile || true'
+                    sh '[ -f Dockerfile ] && docker run --rm -i hadolint/hadolint < Dockerfile || echo "No Dockerfile found, skipping Hadolint."'
                 }
             }
         }
