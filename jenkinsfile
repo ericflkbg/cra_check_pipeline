@@ -6,6 +6,7 @@ pipeline {
         IMAGE_TAG = "latest"
         TRIVY_SERVER = "http://172.18.0.4:4954"
         NEXUS_REPO = "myregistry.local/docker-repo" // Korrigierte URL der Nexus-Registry
+        MONITORING_NETWORK = "monitoring-net"
     }
 
     stages {
@@ -42,6 +43,46 @@ pipeline {
                 aquasec/trivy image --server ${TRIVY_SERVER} \
                 --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
                 """
+            }
+        }
+
+        stage('Deploy OpenPLC for Testing') {
+            steps {
+                script {
+                    echo "Starting OpenPLC (local build)..."
+                    sh '''
+                    docker stop openplc || true
+                    docker rm openplc || true
+                    docker run -d --name openplc --network=${MONITORING_NETWORK} -p 9090:8080 ${IMAGE_NAME}:${IMAGE_TAG}
+                    sleep 10  # Warten, bis OpenPLC gestartet ist
+                    '''
+                }
+            }
+        }
+
+        stage('Run OWASP ZAP DAST Scan') {
+            steps {
+                script {
+                    echo "Starting OWASP ZAP Security Scan..."
+                    sh '''
+                    docker run --rm --network=${MONITORING_NETWORK} \
+                      -v $(pwd):/zap/wrk \
+                      ghcr.io/zaproxy/zaproxy:stable \
+                      zap-baseline.py -t http://openplc:8080 -r /zap/wrk/zap-report.html || true
+                    '''
+                }
+            }
+        }
+
+        stage('Cleanup OpenPLC') {
+            steps {
+                script {
+                    echo "Stopping and Removing OpenPLC..."
+                    sh '''
+                    docker stop openplc || true
+                    docker rm openplc || true
+                    '''
+                }
             }
         }
 
