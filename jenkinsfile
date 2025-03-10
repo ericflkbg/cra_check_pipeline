@@ -119,25 +119,12 @@ pipeline {
         stage('Deploy Prometheus') {
             steps {
                 script {
-                    echo "Creating Prometheus configuration..."
-                    sh '''
-                    mkdir -p prometheus
-                    cat <<EOF > prometheus/prometheus.yml
-global:
-  scrape_interval: 5s
-scrape_configs:
-  - job_name: "openplc"
-    static_configs:
-      - targets: ["openplc:8080"]
-EOF
-                    '''
-
                     echo "Starting Prometheus in production network..."
                     sh '''
                     docker stop prometheus || true
                     docker rm prometheus || true
                     docker run -d --name prometheus --network=live-network \
-                      -p 9091:9090 -v $(pwd)/prometheus:/etc/prometheus \
+                      -p 9091:9090 -v /var/jenkins_home/workspace/cra_check_pipeline/prometheus:/etc/prometheus \
                       prom/prometheus
                     '''
                 }
