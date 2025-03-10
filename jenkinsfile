@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Hadolint to check Dockerfile..."
-                    sh 'docker run --rm -i hadolint/hadolint < Dockerfile || true'
+                    sh 'cat Dockerfile | docker run --rm -i hadolint/hadolint || true'
                 }
             }
         }
