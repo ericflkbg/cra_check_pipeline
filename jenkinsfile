@@ -45,14 +45,14 @@ pipeline {
 
                         docker run --rm --network jenkins \
                         -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v \$(pwd)/trivy_scan:/workspace aquasec/trivy image --server ${TRIVY_SERVER} \
-                        --format json --output /workspace/trivy-results.json 
-                        --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                        -v \$(pwd)/trivy_scan:/workspace \
+                        aquasec/trivy image --server ${TRIVY_SERVER} \
+                        --format json --output /workspace/trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
 
-                        ls -la \$(pwd)/trivy_scan
+                        ls -la \$(pwd)/trivy_scan  
 
                         curl -k -u \$NEXUS_USER:\$NEXUS_PASS --upload-file trivy_scan/trivy-results.json \
-                        ${NEXUS_URL}/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
+                        ${NEXUS_URL}/repository/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
                         """
                     }
                 }
