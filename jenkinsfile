@@ -41,23 +41,21 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
-                        TRIVY_DIR=/var/jenkins_home/workspace/cra_check_pipeline/trivy_scan
-
-                        rm -f \$TRIVY_DIR/trivy-results.json || true
-                        mkdir -p \$TRIVY_DIR
+                        rm -f /var/jenkins_home/workspace/cra_check_pipeline/trivy_scan/trivy-results.json || true
+                        mkdir -p /var/jenkins_home/workspace/cra_check_pipeline/trivy_scan
 
                         echo "Scanning Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
                         docker run --rm --network jenkins \
                         -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v \$TRIVY_DIR:/workspace \
+                        -v /var/jenkins_home/workspace/cra_check_pipeline/trivy_scan:/workspace \
                         aquasec/trivy image --format json --output /workspace/trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
 
                         echo "Listing Trivy-Scan directory:"
-                        ls -la \$TRIVY_DIR
+                        ls -la /var/jenkins_home/workspace/cra_check_pipeline/trivy_scan
 
-                        if [ -f \$TRIVY_DIR/trivy-results.json ]; then
+                        if [ -f /var/jenkins_home/workspace/cra_check_pipeline/trivy_scan/trivy-results.json ]; then
                             echo "Uploading to Nexus..."
-                            curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file \$TRIVY_DIR/trivy-results.json \
+                            curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file /var/jenkins_home/workspace/cra_check_pipeline/trivy_scan/trivy-results.json \
                             ${NEXUS_URL}/repository/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
                         else
                             echo "ERROR: Trivy-Scan-Report missing!"
