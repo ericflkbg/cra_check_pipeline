@@ -41,21 +41,26 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
+                        TRIVY_DIR=/var/jenkins_home/workspace/cra_check_pipeline/trivy_scan
+
+                        rm -f \$TRIVY_DIR/trivy-results.json || true
+                        mkdir -p \$TRIVY_DIR
+
                         echo "Scanning Docker Image: ${IMAGE_NAME}:${IMAGE_TAG}"
                         docker run --rm --network jenkins \
                         -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v \$(pwd):/workspace \
+                        -v \$TRIVY_DIR:/workspace \
                         aquasec/trivy image --format json --output /workspace/trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
 
-                        echo "Liste Jenkins-Workspace:"
-                        ls -la \$(pwd)  
+                        echo "Listing Trivy-Scan directory:"
+                        ls -la \$TRIVY_DIR
 
-                        if [ -f \$(pwd)/trivy-results.json ]; then
-                            echo "Datei gefunden! Hochladen zu Nexus..."
-                            curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file \$(pwd)/trivy-results.json \
+                        if [ -f \$TRIVY_DIR/trivy-results.json ]; then
+                            echo "Uploading to Nexus..."
+                            curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file \$TRIVY_DIR/trivy-results.json \
                             ${NEXUS_URL}/repository/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
                         else
-                            echo "FEHLER: Trivy-Scan-Report fehlt!"
+                            echo "ERROR: Trivy-Scan-Report missing!"
                             exit 1
                         fi
                         """
