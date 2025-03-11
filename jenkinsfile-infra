@@ -102,8 +102,8 @@ pipeline {
                         docker rm ${TRIVY_SERVER_NAME} || true
                         docker run -d --name ${TRIVY_SERVER_NAME} --network ${DOCKER_NETWORK} \
                         -v /var/lib/trivy:/root/.cache/trivy \
+                        -v /var/jenkins_home/workspace/trivy_results:/trivy_results \
                         -p ${TRIVY_SERVER_PORT}:${TRIVY_SERVER_PORT} \
-                        -p -v /var/jenkins_home/workspace/trivy_results:/trivy_results \
                         aquasec/trivy server --listen 0.0.0.0:${TRIVY_SERVER_PORT}
                         """
                         sleep 10
