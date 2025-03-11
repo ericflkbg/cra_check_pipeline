@@ -50,7 +50,7 @@ pipeline {
                         echo "Überprüfe Trivy-Scan-Ausgabe"
                         ls -la
 
-                        curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file /workspace/trivy-results.json \
+                        curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file /workspace/cra_check_pipeline/trivy-results.json \
                         ${NEXUS_URL}/repository/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
                         """
                     }
