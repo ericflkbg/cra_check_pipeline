@@ -43,19 +43,14 @@ pipeline {
                         sh """
                         docker run --rm --network jenkins \
                         -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v \$(pwd):/workspace \
                         aquasec/trivy image --server ${TRIVY_SERVER} \
-                        --format json --output /trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                        --format json --output /workspace/trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
 
                         echo "Überprüfe Trivy-Scan-Ausgabe"
-                        docker run --rm --network jenkins aquasec/trivy image --server ${TRIVY_SERVER} --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
-
-                        echo "Überprüfe Container-Speicherort"
-                        docker run --rm aquasec/trivy ls -la /
-
-                        echo "Überprüfe Jenkins-Workspace"
                         ls -la
 
-                        curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file /trivy-results.json \
+                        curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file /workspace/trivy-results.json \
                         ${NEXUS_URL}/repository/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
                         """
                     }
