@@ -50,10 +50,6 @@ pipeline {
                         echo "Überprüfe Trivy-Scan-Ausgabe"
                         ls -la /var/jenkins_home/workspace/cra_check_pipeline
 
-                        echo "Setze Berechtigungen für Jenkins"
-                        sudo chown -R jenkins:jenkins /var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json
-                        sudo chmod 644 /var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json
-
                         curl -k -v -u \$NEXUS_USER:\$NEXUS_PASS --upload-file /var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json \
                         ${NEXUS_URL}/repository/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
                         """
