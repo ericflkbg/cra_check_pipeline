@@ -44,9 +44,8 @@ pipeline {
                         echo "Starte Trivy-Scan"
                         docker run --name trivy_scan_container --network jenkins \
                         -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v /var/jenkins_home/workspace/cra_check_pipeline:/workspace \
                         aquasec/trivy image --server ${TRIVY_SERVER} \
-                        --format json --output /workspace/trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                        --format json --output trivy-results.json --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
                         
                         echo "Überprüfe Trivy-Scan-Ausgabe"
                         ls -la /var/jenkins_home/workspace/cra_check_pipeline
