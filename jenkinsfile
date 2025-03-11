@@ -6,6 +6,7 @@ pipeline {
         IMAGE_TAG = "latest"
         TRIVY_SERVER = "http://172.18.0.4:4954"
         NEXUS_REPO = "myregistry.local/docker-repo" // Korrigierte URL der Nexus-Registry
+        NEXUS_URL = "https://myregistry.local" // URL für das Hochladen der Trivy-Ergebnisse
         MONITORING_NETWORK = "monitoring-net"
     }
 
@@ -35,14 +36,26 @@ pipeline {
             }
         }
 
-        stage('Scan Docker Image') {
+        stage('Scan Docker Image & Upload Results') {
             steps {
-                sh """
-                docker run --rm --network jenkins \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                aquasec/trivy image --server ${TRIVY_SERVER} \
-                --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                script {
+                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh """
+                        mkdir -p \$(pwd)/trivy_scan  
+
+                        docker run --rm --network jenkins \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v \$(pwd)/trivy_scan:/workspace aquasec/trivy image --server ${TRIVY_SERVER} \
+                        --format json --output /workspace/trivy-results.json \  
+                        --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+
+                        ls -la \$(pwd)/trivy_scan  
+
+                        curl -k -u \$NEXUS_USER:\$NEXUS_PASS --upload-file trivy_scan/trivy-results.json \
+                        ${NEXUS_URL}/trivy-results/trivy-results-\$(date +%Y%m%d%H%M%S).json
+                        """
+                    }
+                }
             }
         }
 
