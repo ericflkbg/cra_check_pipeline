@@ -5,8 +5,8 @@ pipeline {
         IMAGE_NAME = "openplc"
         IMAGE_TAG = "latest"
         TRIVY_SERVER = "http://trivy-server:4954"
-        NEXUS_REPO = "myregistry.local/docker-repo" // Korrigierte URL der Nexus-Registry
-        NEXUS_URL = "https://myregistry.local" // URL für das Hochladen der Trivy-Ergebnisse
+        NEXUS_REPO = "myregistry.local/docker-repo" 
+        NEXUS_URL = "https://myregistry.local" 
         MONITORING_NETWORK = "monitoring-net"
     }
 
@@ -44,10 +44,11 @@ pipeline {
                         docker run --rm \
                           -v /var/run/docker.sock:/var/run/docker.sock \
                           -v /var/jenkins_home/workspace/trivy_results:/trivy_results \
-                          aquasec/trivy image --server ${TRIVY_SERVER} \
+                          aquasec/trivy image \
                           --format json \
                           --output /trivy_results/trivy-results.json \
-                          --severity HIGH,CRITICAL ${IMAGE_NAME}:${IMAGE_TAG}
+                          --severity HIGH,CRITICAL \
+                          ${IMAGE_NAME}:${IMAGE_TAG}
 
                         curl -k -u \$NEXUS_USER:\$NEXUS_PASS \
                           --upload-file /var/jenkins_home/workspace/trivy_results/trivy-results.json \
