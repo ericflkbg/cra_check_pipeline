@@ -98,14 +98,19 @@ pipeline {
         stage('Upload OWASP ZAP Report to Nexus') {
             steps {
                 script {
+                    echo "Copying ZAP report to workspace..."
+                    sh """
+                    cp /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/zap-report-${env.TIMESTAMP}.html \$WORKSPACE/
+                    """
+
                     echo "Uploading OWASP ZAP Report to Nexus..."
-                    
-                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', 
+                                                     usernameVariable: 'NEXUS_USER', 
+                                                     passwordVariable: 'NEXUS_PASS')]) {
                         sh """
-                        docker exec -u root jenkins-blueocean sh -c \"
-                          curl -k -u \\\"\$NEXUS_USER:\$NEXUS_PASS\\\" \
-                          --upload-file /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/zap-report-${env.TIMESTAMP}.html \
-                          http://192.168.2.143:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html\"
+                        curl -k -u "\$NEXUS_USER:\$NEXUS_PASS" \
+                          --upload-file "\$WORKSPACE/zap-report-${env.TIMESTAMP}.html" \
+                          http://192.168.2.143:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html
                         """
                     }
                 }
