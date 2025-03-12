@@ -41,9 +41,8 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
-                        OUTPUT_FILE=/workspace/cra_check_pipeline/trivy-results.json
+                        OUTPUT_FILE=/workspace/trivy-results.json
 
-                        # Trivy Scan ausführen (Datei wird überschrieben)
                         docker run --rm \
                           -v /var/run/docker.sock:/var/run/docker.sock \
                           -v /var/lib/docker/volumes/jenkins-data/_data:/workspace \
@@ -53,11 +52,9 @@ pipeline {
                           --severity HIGH,CRITICAL \
                           ${IMAGE_NAME}:${IMAGE_TAG}
 
-                        # Berechtigungen für Jenkins setzen
                         chown 1000:1000 \$OUTPUT_FILE
                         chmod 644 \$OUTPUT_FILE
 
-                        # Datei zu Nexus hochladen (gleicher Name bei jedem Upload)
                         curl -k -u \$NEXUS_USER:\$NEXUS_PASS \
                           --upload-file \$OUTPUT_FILE \
                           ${NEXUS_URL}/repository/trivy-results/trivy-results.json
