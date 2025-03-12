@@ -40,15 +40,17 @@ pipeline {
             steps {
                 script {
                     sh """
+                    TIMESTAMP=\$(date +%Y%m%d%H%M%S)
                     docker run --rm \
                       -v /var/run/docker.sock:/var/run/docker.sock \
                       aquasec/trivy image \
                       --format json \
-                      --output trivy-results-$(date +%Y%m%d%H%M%S).json \
+                      --output trivy-results-\${TIMESTAMP}.json \
                       --severity HIGH,CRITICAL \
-                      openplc:latest
+                      \${IMAGE_NAME}:\${IMAGE_TAG}
+
+                    ls -lah
                     """
-                    sh 'ls -lah'
                 }
             }
         }
