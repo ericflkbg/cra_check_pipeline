@@ -39,7 +39,7 @@ pipeline {
         stage('Test Trivy') {
             steps {
                 script {
-                    sh 'trivy image --server http://localhost:4954 openplc:latest'
+                    sh 'trivy image --server http://trivy-server:4954 openplc:latest'
                 }
             }
         }
