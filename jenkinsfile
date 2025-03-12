@@ -86,7 +86,7 @@ pipeline {
                 }
             }
         }
-        
+        */
         stage('Deploy OpenPLC for Testing') {
             steps {
                 script {
@@ -186,7 +186,7 @@ pipeline {
             }
         }
     }
-    */
+
     post {
         always {
             echo "Pipeline abgeschlossen!"
