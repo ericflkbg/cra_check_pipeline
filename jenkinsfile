@@ -41,16 +41,12 @@ pipeline {
                 script {
                     sh """
                     TIMESTAMP=\$(date +%Y%m%d%H%M%S)
-                    OUTPUT_FILE=/var/jenkins_home/workspace/cra_check_pipeline/trivy-results-\$TIMESTAMP.json
+                    OUTPUT_FILE=\${WORKSPACE}/trivy-results-\$TIMESTAMP.json
 
-                    # Setze Trivy in den Standalone-Modus
-                    export TRIVY_MODE=standalone
+                    # Schwachstellen-Datenbank aktualisieren
+                    /var/jenkins_home/bin/trivy image --download-db-only
 
-                    # Schwachstellen-Datenbank vor dem Scan aktualisieren
-                    /var/jenkins_home/bin/trivy image \
-                      --download-db-only
-
-                    # Scan ausführen
+                    # Image-Scan ausführen
                     /var/jenkins_home/bin/trivy image \
                       --scanners vuln \
                       --format json \
@@ -58,7 +54,8 @@ pipeline {
                       --severity HIGH,CRITICAL \
                       openplc:latest
 
-                    ls -lah /var/jenkins_home/workspace/cra_check_pipeline/
+                    # Überprüfen, ob die Datei existiert
+                    ls -lah \${WORKSPACE}
                     """
                 }
             }
