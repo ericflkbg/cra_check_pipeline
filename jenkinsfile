@@ -36,29 +36,10 @@ pipeline {
             }
         }
         */
-        stage('Scan Docker Image') {
+        stage('Test Trivy') {
             steps {
                 script {
-                    sh '''
-                    export TRIVY_MODE=standalone
-                    export TRIVY_CACHE_DIR=/var/jenkins_home/.cache/trivy
-
-                    TIMESTAMP=$(date +%Y%m%d%H%M%S)
-                    OUTPUT_FILE=${WORKSPACE}/trivy-results-$TIMESTAMP.json
-
-                    # Fehlerbehebung: Stellt sicher, dass Trivy ohne Client/Server-Modus läuft
-                    /var/jenkins_home/bin/trivy image --download-db-only
-
-                    # Scan ausführen
-                    /var/jenkins_home/bin/trivy image \
-                      --scanners vuln \
-                      --format json \
-                      --output $OUTPUT_FILE \
-                      --severity HIGH,CRITICAL \
-                      openplc:latest
-
-                    ls -lah ${WORKSPACE}
-                    '''
+                    sh 'trivy openplc:latest'
                 }
             }
         }
