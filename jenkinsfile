@@ -56,7 +56,7 @@ pipeline {
                       --format json \
                       --output \$OUTPUT_FILE \
                       --severity HIGH,CRITICAL \
-                      \${IMAGE_NAME}:\${IMAGE_TAG}
+                      openplc:latest
 
                     ls -lah /var/jenkins_home/workspace/cra_check_pipeline/
                     """
