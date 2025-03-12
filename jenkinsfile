@@ -48,8 +48,6 @@ pipeline {
                       --output /workspace/trivy-results-\$(date +%Y%m%d%H%M%S).json \
                       --severity HIGH,CRITICAL \
                       \${IMAGE_NAME}:\${IMAGE_TAG}
-
-                    ls -lah /workspace
                     """
                 }
             }
