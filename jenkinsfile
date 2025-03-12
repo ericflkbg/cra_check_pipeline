@@ -39,27 +39,31 @@ pipeline {
         stage('Scan Docker Image & Upload Results') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                        sh """
-                        OUTPUT_FILE=/workspace/trivy-results.json
+                    sh """
+                    OUTPUT_FILE=/workspace/trivy-results.json
 
-                        docker run --rm \
-                          -v /var/run/docker.sock:/var/run/docker.sock \
-                          -v /var/lib/docker/volumes/jenkins-data/_data:/workspace \
-                          aquasec/trivy image \
-                          --format json \
-                          --output \$OUTPUT_FILE \
-                          --severity HIGH,CRITICAL \
-                          ${IMAGE_NAME}:${IMAGE_TAG}
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      -v /var/lib/docker/volumes/jenkins-data/_data:/workspace \
+                      aquasec/trivy image \
+                      --format json \
+                      --output \$OUTPUT_FILE \
+                      --severity HIGH,CRITICAL \
+                      ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
 
-                        chown 1000:1000 \$OUTPUT_FILE
-                        chmod 644 \$OUTPUT_FILE
-
-                        curl -k -u \$NEXUS_USER:\$NEXUS_PASS \
-                          --upload-file \$OUTPUT_FILE \
-                          ${NEXUS_URL}/repository/trivy-results/trivy-results.json
-                        """
-                    }
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'https',
+                        nexusUrl: 'myregistry.local',
+                        groupId: 'trivy-results',
+                        version: 'latest',
+                        repository: 'trivy-results',
+                        credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb',
+                        artifacts: [
+                            [artifactId: 'trivy-results', classifier: '', file: '/workspace/trivy-results.json', type: 'json']
+                        ]
+                    )
                 }
             }
         }
