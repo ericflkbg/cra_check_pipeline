@@ -36,6 +36,23 @@ pipeline {
             }
         }
         */
+        stage('Scan Docker Image') {
+            steps {
+                script {
+                    sh """
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      aquasec/trivy image \
+                      --format json \
+                      --output trivy-results.json \
+                      --severity HIGH,CRITICAL \
+                      ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                    sh 'ls -lah'
+                }
+            }
+        }
+        /*
         stage('Scan Docker Image & Upload Results') {
             steps {
                 script {
@@ -56,8 +73,8 @@ pipeline {
                         nexusVersion: 'nexus3',
                         protocol: 'https',
                         nexusUrl: 'myregistry.local',
-                        groupId: 'trivy-results',
-                        version: 'latest',
+                        groupId: '',
+                        version: '',
                         repository: 'trivy-results',
                         credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb',
                         artifacts: [
@@ -67,7 +84,7 @@ pipeline {
                 }
             }
         }
-
+        */
         stage('Deploy OpenPLC for Testing') {
             steps {
                 script {
