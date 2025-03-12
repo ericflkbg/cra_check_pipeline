@@ -41,15 +41,17 @@ pipeline {
                 script {
                     sh """
                     TIMESTAMP=\$(date +%Y%m%d%H%M%S)
-                    OUTPUT_FILE=\${WORKSPACE}/trivy-results-\$TIMESTAMP.json
+                    OUTPUT_FILE=/var/jenkins_home/workspace/cra_check_pipeline/trivy-results-\$TIMESTAMP.json
 
                     /var/jenkins_home/bin/trivy image \
+                      --offline-scan \
+                      --skip-db-update \
                       --format json \
                       --output \$OUTPUT_FILE \
                       --severity HIGH,CRITICAL \
                       \${IMAGE_NAME}:\${IMAGE_TAG}
 
-                    ls -lah \${WORKSPACE}
+                    ls -lah /var/jenkins_home/workspace/cra_check_pipeline/
                     """
                 }
             }
