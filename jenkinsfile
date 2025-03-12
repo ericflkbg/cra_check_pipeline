@@ -50,39 +50,23 @@ pipeline {
                 }
             }
         }
-        /*
-        stage('Scan Docker Image & Upload Results') {
+
+        stage('Upload Trivy Results to Nexus') {
             steps {
                 script {
-                    sh """
-                    OUTPUT_FILE=/var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json
-
-                    docker run --rm \
-                      -v /var/run/docker.sock:/var/run/docker.sock \
-                      -v /var/jenkins_home/workspace/cra_check_pipeline:/var/jenkins_home/workspace/cra_check_pipeline \
-                      aquasec/trivy image \
-                      --format json \
-                      --output \$OUTPUT_FILE \
-                      --severity HIGH,CRITICAL \
-                      ${IMAGE_NAME}:${IMAGE_TAG}
-                    """
-
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'https',
-                        nexusUrl: 'myregistry.local',
-                        groupId: '',
-                        version: '',
-                        repository: 'trivy-results',
-                        credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb',
-                        artifacts: [
-                            [artifactId: 'trivy-results', classifier: '', file: '/var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json', type: 'json']
-                        ]
-                    )
+                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh '''
+                        FILE_PATH=${WORKSPACE}/trivy-results-$TIMESTAMP.json
+                        
+                        curl -k -u $NEXUS_USER:$NEXUS_PASS \
+                          --upload-file $FILE_PATH \
+                          $NEXUS_URL/repository/trivy-results/trivy-results-$TIMESTAMP.json
+                        '''
+                    }
                 }
             }
         }
-        */
+
         stage('Deploy OpenPLC for Testing') {
             steps {
                 script {
