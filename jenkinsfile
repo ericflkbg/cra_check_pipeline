@@ -40,19 +40,16 @@ pipeline {
             steps {
                 script {
                     sh """
-                    OUTPUT_FILE=/workspace/trivy-results.json
-                    WORKSPACE_FILE=\${WORKSPACE}/trivy-results.json
+                    OUTPUT_FILE=/var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json
 
                     docker run --rm \
                       -v /var/run/docker.sock:/var/run/docker.sock \
-                      -v /var/lib/docker/volumes/jenkins-data/_data:/workspace \
+                      -v /var/jenkins_home/workspace/cra_check_pipeline:/var/jenkins_home/workspace/cra_check_pipeline \
                       aquasec/trivy image \
                       --format json \
                       --output \$OUTPUT_FILE \
                       --severity HIGH,CRITICAL \
                       ${IMAGE_NAME}:${IMAGE_TAG}
-
-                    cp \$OUTPUT_FILE \$WORKSPACE_FILE
                     """
 
                     nexusArtifactUploader(
@@ -64,7 +61,7 @@ pipeline {
                         repository: 'trivy-results',
                         credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb',
                         artifacts: [
-                            [artifactId: 'trivy-results', classifier: '', file: 'trivy-results.json', type: 'json']
+                            [artifactId: 'trivy-results', classifier: '', file: '/var/jenkins_home/workspace/cra_check_pipeline/trivy-results.json', type: 'json']
                         ]
                     )
                 }
