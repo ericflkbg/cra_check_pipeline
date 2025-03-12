@@ -85,10 +85,10 @@ pipeline {
                 script {
                     echo "Starting OWASP ZAP Security Scan..."
                     sh """
-                    docker run --rm --network=${MONITORING_NETWORK} --user root\
-                      -v /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline:/zap/wrk/:rw \
+                    docker run --rm --network=${MONITORING_NETWORK} \
+                      -v \$WORKSPACE:/zap/wrk \
                       ghcr.io/zaproxy/zaproxy:stable \
-                      zap-baseline.py -t http://openplc:8080 -r zap-report-${env.TIMESTAMP}.html || true
+                      zap-baseline.py -t http://openplc:8080 -r /zap/wrk/zap-report-${env.TIMESTAMP}.html
                     """
                     // h 'cat zap-debug-${env.TIMESTAMP}.log'
                 }
@@ -98,12 +98,8 @@ pipeline {
         stage('Upload OWASP ZAP Report to Nexus') {
             steps {
                 script {
-                    echo "Copying ZAP report to workspace..."
-                    sh """
-                    cp /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/zap-report-${env.TIMESTAMP}.html \$WORKSPACE/
-                    """
+                    echo "Uploading OWASP ZAP Report to Nexus from WORKSPACE..."
 
-                    echo "Uploading OWASP ZAP Report to Nexus..."
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', 
                                                      usernameVariable: 'NEXUS_USER', 
                                                      passwordVariable: 'NEXUS_PASS')]) {
