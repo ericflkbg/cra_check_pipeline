@@ -43,9 +43,16 @@ pipeline {
                     TIMESTAMP=\$(date +%Y%m%d%H%M%S)
                     OUTPUT_FILE=/var/jenkins_home/workspace/cra_check_pipeline/trivy-results-\$TIMESTAMP.json
 
+                    # Setze Trivy in den Standalone-Modus
+                    export TRIVY_MODE=standalone
+
+                    # Schwachstellen-Datenbank vor dem Scan aktualisieren
                     /var/jenkins_home/bin/trivy image \
-                      --offline-scan \
-                      --skip-db-update \
+                      --download-db-only
+
+                    # Scan ausführen
+                    /var/jenkins_home/bin/trivy image \
+                      --scanners vuln \
                       --format json \
                       --output \$OUTPUT_FILE \
                       --severity HIGH,CRITICAL \
