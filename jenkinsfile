@@ -186,7 +186,7 @@ pipeline {
             }
         }
     }
-
+    */
     post {
         always {
             echo "Pipeline abgeschlossen!"
@@ -196,4 +196,3 @@ pipeline {
         }
     }
 }
-*/
