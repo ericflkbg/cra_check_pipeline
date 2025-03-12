@@ -40,14 +40,16 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker run --rm \
-                      -v /var/run/docker.sock:/var/run/docker.sock \
-                      -v \${WORKSPACE}:/workspace \
-                      aquasec/trivy image \
+                    TIMESTAMP=\$(date +%Y%m%d%H%M%S)
+                    OUTPUT_FILE=\${WORKSPACE}/trivy-results-\$TIMESTAMP.json
+
+                    /var/jenkins_home/bin/trivy image \
                       --format json \
-                      --output /workspace/trivy-results-\$(date +%Y%m%d%H%M%S).json \
+                      --output \$OUTPUT_FILE \
                       --severity HIGH,CRITICAL \
                       \${IMAGE_NAME}:\${IMAGE_TAG}
+
+                    ls -lah \${WORKSPACE}
                     """
                 }
             }
