@@ -36,26 +36,20 @@ pipeline {
             }
         }
         */
-        stage('Scan Docker Image') {
+        stage('Debugging') {
             steps {
                 script {
                     sh """
-                    TIMESTAMP=\$(date +%Y%m%d%H%M%S)
-                    OUTPUT_FILE=\${WORKSPACE}/trivy-results-\$TIMESTAMP.json
-
-                    # Schwachstellen-Datenbank aktualisieren
-                    /var/jenkins_home/bin/trivy image --download-db-only
-
-                    # Image-Scan ausführen
-                    /var/jenkins_home/bin/trivy image \
-                      --scanners vuln \
-                      --format json \
-                      --output \$OUTPUT_FILE \
-                      --severity HIGH,CRITICAL \
-                      openplc:latest
-
-                    # Überprüfen, ob die Datei existiert
-                    ls -lah \${WORKSPACE}
+                    echo "Aktueller Benutzer:"
+                    whoami
+                    echo "Aktuelles Verzeichnis:"
+                    pwd
+                    echo "Umgebungsvariablen:"
+                    env
+                    echo "Verfügbare Docker-Images:"
+                    docker images | grep openplc
+                    echo "Versuch, das Image direkt zu scannen:"
+                    /var/jenkins_home/bin/trivy image openplc:latest
                     """
                 }
             }
