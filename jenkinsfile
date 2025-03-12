@@ -43,7 +43,7 @@ pipeline {
                         sh """
                         docker run --rm \
                           -v /var/run/docker.sock:/var/run/docker.sock \
-                          -v /var/jenkins_home/workspace/trivy_results:/trivy_results \
+                          -v /var/jenkins_home/workspace/cra_check_pipeline/trivy_results:/trivy_results \
                           aquasec/trivy image \
                           --format json \
                           --output /trivy_results/trivy-results.json \
