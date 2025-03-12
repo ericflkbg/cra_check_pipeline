@@ -44,7 +44,7 @@ pipeline {
                       -v /var/run/docker.sock:/var/run/docker.sock \
                       aquasec/trivy image \
                       --format json \
-                      --output trivy-results.json \
+                      --output trivy-results-$(date +%Y%m%d%H%M%S).json \
                       --severity HIGH,CRITICAL \
                       ${IMAGE_NAME}:${IMAGE_TAG}
                     """
