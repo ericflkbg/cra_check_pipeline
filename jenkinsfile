@@ -60,7 +60,7 @@ pipeline {
                         
                         curl -k -u $NEXUS_USER:$NEXUS_PASS \
                           --upload-file $FILE_PATH \
-                          $NEXUS_URL/repository/trivy-results/trivy-results-$TIMESTAMP.json
+                          http://host.docker.internal:8081/repository/trivy-results/trivy-results-$TIMESTAMP.json
                         '''
                     }
                 }
