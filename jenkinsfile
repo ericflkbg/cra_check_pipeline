@@ -46,8 +46,16 @@ pipeline {
                     TIMESTAMP=$(date +%Y%m%d%H%M%S)
                     OUTPUT_FILE=${WORKSPACE}/trivy-results-$TIMESTAMP.json
 
-                    echo "Finaler Trivy-Befehl wird ausgeführt:"
-                    trivy image openplc:latest --scanners vuln --format json --output $OUTPUT_FILE --severity HIGH,CRITICAL
+                    # Fehlerbehebung: Stellt sicher, dass Trivy ohne Client/Server-Modus läuft
+                    /var/jenkins_home/bin/trivy image --download-db-only
+
+                    # Scan ausführen
+                    /var/jenkins_home/bin/trivy image \
+                      --scanners vuln \
+                      --format json \
+                      --output $OUTPUT_FILE \
+                      --severity HIGH,CRITICAL \
+                      openplc:latest
 
                     ls -lah ${WORKSPACE}
                     '''
