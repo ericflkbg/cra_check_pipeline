@@ -85,10 +85,10 @@ pipeline {
                 script {
                     echo "Starting OWASP ZAP Security Scan..."
                     sh """
-                    docker run --rm --network=${MONITORING_NETWORK} \
+                    docker run --rm --network=${MONITORING_NETWORK} --user root\
                       -v \$(pwd):/zap/wrk/:rw \
                       ghcr.io/zaproxy/zaproxy:stable \
-                      zap-baseline.py -t http://openplc:8080 -r /zap/wrk/zap-report-${env.TIMESTAMP}.html 
+                      zap-baseline.py -t http://openplc:8080 -r zap-report-${env.TIMESTAMP}.html 
                     """
                 }
             }
