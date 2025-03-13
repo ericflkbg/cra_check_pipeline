@@ -37,6 +37,16 @@ pipeline {
             }
         }
         */
+        
+        stage('Test sudo') {
+            steps {
+                script {
+                    sh "sudo -n whoami"
+                }
+            }
+        }
+    
+
         stage('Scan Docker Image') {
             steps {
                 script {
@@ -101,9 +111,7 @@ pipeline {
                     echo "Uploading OWASP ZAP Report to Nexus as root with sudo password..."
                     
                     withCredentials([
-                        usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', 
-                                         usernameVariable: 'NEXUS_USER', 
-                                         passwordVariable: 'NEXUS_PASS'),
+                        usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS'),
                         string(credentialsId: 'SUDO_PASS', variable: 'SUDO_PASS')
                     ]) {
                         sh """
