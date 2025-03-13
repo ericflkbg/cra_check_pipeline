@@ -96,8 +96,7 @@ pipeline {
                 }
             }
         }
-    }  
-    /* 
+        /* 
         stage('Run OWASP ZAP DAST Scan') {
             steps {
                 script {
@@ -112,26 +111,28 @@ pipeline {
                 }
             }
         }
-
+        */
         stage('Upload OWASP ZAP Report to Nexus') {
-    steps {
-        script {
-            echo "Uploading OWASP ZAP Report to Nexus as root with sudo password..."
-            
-            withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', 
-                                             usernameVariable: 'NEXUS_USER', 
-                                             passwordVariable: 'NEXUS_PASS')]) {
-                sh """
-                echo 'ubuntu' | sudo -S curl -k -u "\$NEXUS_USER:\$NEXUS_PASS" \
-                  --upload-file "\$WORKSPACE/zap-report-${env.TIMESTAMP}.html" \
-                  http://192.168.2.143:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html
-                """
+            steps {
+                script {
+                    echo "Uploading OWASP ZAP Report to Nexus as root with sudo password..."
+                    
+                    withCredentials([
+                        usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', 
+                                         usernameVariable: 'NEXUS_USER', 
+                                         passwordVariable: 'NEXUS_PASS'),
+                        string(credentialsId: 'SUDO_PASS', variable: 'SUDO_PASS')
+                    ]) {
+                        sh """
+                        echo "\$SUDO_PASS" | sudo -S curl -k -u "\$NEXUS_USER:\$NEXUS_PASS" \
+                          --upload-file "\$WORKSPACE/zap-report-${env.TIMESTAMP}.html" \
+                          http://192.168.2.143:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html
+                        """
+                    }
+                }
             }
         }
-    }
-}
 
-*/
         stage('Cleanup OpenPLC') {
             steps {
                 script {
