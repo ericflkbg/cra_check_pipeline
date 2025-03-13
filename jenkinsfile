@@ -97,11 +97,6 @@ pipeline {
         stage('Upload OWASP ZAP Report to Nexus') {
             steps {
                 script {
-                    echo "Copying ZAP report to workspace..."
-                    sh """
-                    cp /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/zap-report-${env.TIMESTAMP}.html \$WORKSPACE/
-                    """
-
                     echo "Uploading OWASP ZAP Report to Nexus..."
                     withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
