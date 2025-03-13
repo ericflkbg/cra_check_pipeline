@@ -79,24 +79,7 @@ pipeline {
                 }
             }
         }
-        stage('Run OWASP ZAP Scan') {
-            steps {
-                script {
-                    echo "Running OWASP ZAP Scan against OpenPLC..."
-
-                    zap(
-                        zapHome: '/opt/zaproxy',  // Falls Jenkins das Plugin nicht automatisch erkennt
-                        target: "http://openplc:8080",  // OpenPLC-URL hier setzen!
-                        scanType: 'baseline',
-                        reportType: 'html',
-                        reportName: "zap-report-${env.TIMESTAMP}.html",
-                        reportDir: "${WORKSPACE}",
-                        timeout: 300
-                    )
-                }
-            }
-        }
-        /* 
+         
         stage('Run OWASP ZAP DAST Scan') {
             steps {
                 script {
@@ -111,7 +94,7 @@ pipeline {
                 }
             }
         }
-        */
+        
         stage('Upload OWASP ZAP Report to Nexus') {
             steps {
                 script {
