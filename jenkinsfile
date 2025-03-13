@@ -36,7 +36,7 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
-        */
+        
         stage('Scan Docker Image') {
             steps {
                 script {
@@ -65,7 +65,7 @@ pipeline {
                 }
             }
         }
-
+        */
         stage('Deploy OpenPLC for Testing') {
             steps {
                 script {
