@@ -36,7 +36,7 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
-        
+        */
         stage('Scan Docker Image') {
             steps {
                 script {
@@ -65,7 +65,7 @@ pipeline {
                 }
             }
         }
-        */
+        
         stage('Deploy OpenPLC for Testing') {
             steps {
                 script {
@@ -93,7 +93,7 @@ pipeline {
                 }
             }
         }
-        /*
+        
         stage('Upload OWASP ZAP Report to Nexus') {
             steps {
                 script {
@@ -103,19 +103,17 @@ pipeline {
                     """
 
                     echo "Uploading OWASP ZAP Report to Nexus..."
-                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', 
-                                                     usernameVariable: 'NEXUS_USER', 
-                                                     passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                         curl -k -u "\$NEXUS_USER:\$NEXUS_PASS" \
-                          --upload-file "\$WORKSPACE/zap-report-${env.TIMESTAMP}.html" \
+                          --upload-file "/var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/zap-report-${env.TIMESTAMP}.html" \
                           http://192.168.2.143:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html
                         """
                     }
                 }
             }
         }
-        */
+        
         stage('Cleanup OpenPLC') {
             steps {
                 script {
