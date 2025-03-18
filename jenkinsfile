@@ -50,6 +50,19 @@ pipeline {
             }
         }
 
+        stage('Generate SBOM') {
+            steps {
+                script {
+                    SBOM_FILE = "${WORKSPACE}/trivy-sbom-${env.TIMESTAMP}.json"
+
+                    sh """
+                    trivy image --server ${TRIVY_SERVER} --format spdx-json --output ${SBOM_FILE} ${IMAGE_NAME}:${IMAGE_TAG}
+                    ls -lah ${WORKSPACE}
+                    """
+                }
+            }
+        }
+
         stage('Upload Trivy Results to Nexus') {
             steps {
                 script {
@@ -66,6 +79,23 @@ pipeline {
             }
         }
         
+        stage('Upload SBOM to Nexus') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        SBOM_FILE = "${WORKSPACE}/trivy-sbom-${env.TIMESTAMP}.json"
+                
+                        sh """
+                        curl -k -u \$NEXUS_USER:\$NEXUS_PASS \
+                        --upload-file ${SBOM_FILE} \
+                         http://192.168.2.143:8081/repository/trivy-sbom/trivy-sbom-${env.TIMESTAMP}.json
+                         """
+                    }
+                }
+            }
+        }
+
+
         stage('Deploy OpenPLC for Testing') {
             steps {
                 script {
