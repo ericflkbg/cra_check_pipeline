@@ -72,7 +72,7 @@ pipeline {
                         sh """
                         curl -k -u \$NEXUS_USER:\$NEXUS_PASS \
                           --upload-file ${FILE_PATH} \
-                          http://192.168.2.143:8081/repository/trivy-results/trivy-results-${env.TIMESTAMP}.json
+                          http://192.168.2.145:8081/repository/trivy-results/trivy-results-${env.TIMESTAMP}.json
                         """
                     }
                 }
@@ -88,7 +88,7 @@ pipeline {
                         sh """
                         curl -k -u \$NEXUS_USER:\$NEXUS_PASS \
                         --upload-file ${SBOM_FILE} \
-                         http://192.168.2.143:8081/repository/trivy-sbom/trivy-sbom-${env.TIMESTAMP}.json
+                         http://192.168.2.145:8081/repository/trivy-sbom/trivy-sbom-${env.TIMESTAMP}.json
                          """
                     }
                 }
@@ -132,7 +132,7 @@ pipeline {
                         sh """
                         sudo -n curl -k -u "\$NEXUS_USER:\$NEXUS_PASS" \
                           --upload-file "/var/jenkins_home/workspace/cra_check_pipeline//zap-report-${env.TIMESTAMP}.html" \
-                          http://192.168.2.143:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html
+                          http://192.168.2.145:8081/repository/owasp-zap-results/zap-report-${env.TIMESTAMP}.html
                         """
                     }
                 }
