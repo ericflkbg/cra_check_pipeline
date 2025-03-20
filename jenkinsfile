@@ -30,6 +30,65 @@ pipeline {
                 }
             }
         }
+        stage('Start SonarQube Container') {
+            steps {
+                script {
+                    echo "Starting SonarQube container in jenkins network..."
+                    sh """
+                    docker stop sonarqube || true
+                    docker rm sonarqube || true
+                    docker run -d --name sonarqube --user 1000:1000 \
+                    --network=jenkins \
+                    -p 9000:9000 \
+                    -v /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline:/opt/sonarqube/workspace \
+                    sonarqube:community
+                    echo "Waiting for SonarQube to be ready..."
+                    until curl -s http://sonarqube:9000/api/system/status | grep -q '"status":"UP"'; do sleep 5; done
+                    """
+                }
+            }
+        }
+
+        stage('Run SonarQube Scan') {
+            steps {
+                script {
+                    echo "Running SonarQube scanner in jenkins network..."
+                    sh """
+                    docker run --rm --user 1000:1000 --network=jenkins \
+                    -v /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline:/usr/src \
+                    sonarsource/sonar-scanner-cli:latest \
+                    -Dsonar.projectKey=openplc \
+                    -Dsonar.sources=/usr/src \
+                    -Dsonar.host.url=http://sonarqube:9000 \
+                    -Dsonar.login=admin \
+                    -Dsonar.password=admin || echo "SonarQube Scan failed!"
+                    """
+                }
+            }
+        }
+
+        stage('Export SonarQube Report JSON') {
+            steps {
+                script {
+                    echo "Fetching SonarQube JSON results..."
+                    sh """
+                    curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" \
+                    -o /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/sonarqube-report-${env.TIMESTAMP}.json
+                    ls -lah /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/
+                    """
+                }
+            }
+        }
+
+        stage('Stop SonarQube Container') {
+            steps {
+                script {
+                    echo "Stopping SonarQube container..."
+                    sh 'docker stop sonarqube || true && docker rm sonarqube || true'
+                }
+            }
+        }
+
         /*
         stage('Build Docker Image') {
             steps {
