@@ -88,6 +88,23 @@ pipeline {
             }
         }
 
+        stage('Upload SonarQube Report to Nexus') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: '7211db4a-9c31-434c-8a12-44e0667143fb', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    def reportFile = "${WORKSPACE}/sonarqube-report-${env.TIMESTAMP}.json"
+                
+                    sh """
+                    echo "Uploading SonarQube report to Nexus..."
+                    curl -k -u \$NEXUS_USER:\$NEXUS_PASS \\
+                      --upload-file ${reportFile} \\
+                      http://${HOST_IP}:8081/repository/sonarqube-reports/sonarqube-report-${env.TIMESTAMP}.json
+                    """
+                    }
+                }
+            }
+        }
+
         /*
         stage('Stop SonarQube Container') {
             steps {
