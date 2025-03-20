@@ -75,6 +75,7 @@ pipeline {
         stage('Export SonarQube Report JSON') {
             steps {
                 script {
+                    sleep(30)
                     echo "Fetching SonarQube JSON results..."
                     sh """
                     curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" -o ${WORKSPACE}/sonarqube-report-${env.TIMESTAMP}.json
