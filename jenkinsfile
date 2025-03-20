@@ -40,7 +40,6 @@ pipeline {
                     docker run -d --name sonarqube --user 1000:1000 \
                     --network=jenkins \
                     -p 9000:9000 \
-                    -v /var/jenkins_home/workspace/cra_check_pipeline:/opt/sonarqube/workspace \
                     sonarqube:community
                     echo "Waiting for SonarQube to be ready..."
                     until curl -s http://sonarqube:9000/api/system/status | grep -q '"status":"UP"'; do sleep 5; done
@@ -55,7 +54,7 @@ pipeline {
                     echo "Running SonarQube scanner in jenkins network..."
                     sh """
                     docker run --rm --user 1000:1000 --network=jenkins \
-                    -v /var/jenkins_home/workspace/cra_check_pipeline:/usr/src \
+                    -v ${WORKSPACE}:/usr/src \
                     sonarsource/sonar-scanner-cli:latest \
                     -Dsonar.projectKey=openplc \
                     -Dsonar.sources=/usr/src \
@@ -72,8 +71,8 @@ pipeline {
                 script {
                     echo "Fetching SonarQube JSON results..."
                     sh """
-                    curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" -o /var/jenkins_home/workspace/cra_check_pipeline/sonarqube-report-${env.TIMESTAMP}.json
-                    ls -lah /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/
+                    curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" -o ${WORKSPACE}/sonarqube-report-${env.TIMESTAMP}.json
+                    ls -lah ${WORKSPACE}
                     """
                 }
             }
