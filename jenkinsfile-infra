@@ -113,10 +113,31 @@ pipeline {
 
                     echo "Checking Trivy server health..."
                     sh "curl -s ${TRIVY_SERVER_URL}/healthz || (echo 'Trivy server health check failed!' && exit 1)"
+                    }
                 }
             }
         }
-    }
+
+        stage('Start SonarQube Container') {
+            steps {
+                script {
+                    echo "Starting SonarQube container in jenkins network..."
+                    sh """
+                    docker stop sonarqube || true
+                    docker rm sonarqube || true
+                    docker run -d --name sonarqube --user 1000:1000 \
+                    --network=jenkins \
+                    -p 9000:9000 \
+                    -v sonarqube_data:/opt/sonarqube/data \
+                    -v sonarqube_extensions:/opt/sonarqube/extensions \
+                    -v sonarqube_logs:/opt/sonarqube/logs \
+                    sonarqube:community
+                    echo "Waiting for SonarQube to be ready..."
+                    until curl -s http://sonarqube:9000/api/system/status | grep -q '"status":"UP"'; do sleep 5; done
+                    """
+                }
+            }
+        }
 
     post {
         always {
