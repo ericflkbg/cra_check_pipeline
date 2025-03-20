@@ -78,7 +78,7 @@ pipeline {
                     sleep(30)
                     echo "Fetching SonarQube JSON results..."
                     sh """
-                    curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" -o ${WORKSPACE}/sonarqube-report-${env.TIMESTAMP}.json
+                    curl -s "http://${HOST_IP}:9000/api/issues/search?projectKeys=openplc&ps=500" -o ${WORKSPACE}/sonarqube-report-${env.TIMESTAMP}.json
                     ls -lah ${WORKSPACE}
                     """
                 }
