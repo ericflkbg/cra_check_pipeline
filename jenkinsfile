@@ -72,9 +72,7 @@ pipeline {
                 script {
                     echo "Fetching SonarQube JSON results..."
                     sh """
-                    curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" \\
-                    -o /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/sonarqube-report-${env.TIMESTAMP}.json
-
+                    curl -s "http://sonarqube:9000/api/issues/search?projectKeys=openplc&ps=500" -o /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/sonarqube-report-${env.TIMESTAMP}.json
                     ls -lah /var/lib/docker/volumes/jenkins-data/_data/workspace/cra_check_pipeline/
                     """
                 }
