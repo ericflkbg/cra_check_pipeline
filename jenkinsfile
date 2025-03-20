@@ -78,7 +78,7 @@ pipeline {
                 }
             }
         }
-
+        /*
         stage('Stop SonarQube Container') {
             steps {
                 script {
@@ -87,7 +87,7 @@ pipeline {
                 }
             }
         }
-
+        */
         /*
         stage('Build Docker Image') {
             steps {
