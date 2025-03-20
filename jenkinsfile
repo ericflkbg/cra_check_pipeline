@@ -53,16 +53,17 @@ pipeline {
             steps {
                 script {
                     echo "Running SonarQube scanner in jenkins network..."
-                    sh """
-                    docker run --rm --user 1000:1000 --network=jenkins \
-                    -v ${WORKSPACE}:/usr/src \
-                    sonarsource/sonar-scanner-cli:latest \
-                    -Dsonar.projectKey=openplc \
-                    -Dsonar.sources=/usr/src \
-                    -Dsonar.host.url=http://sonarqube:9000 \
-                    -Dsonar.login=admin \
-                    -Dsonar.password=admin || echo "SonarQube Scan failed!"
-                    """
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                        sh """
+                            docker run --rm --user 1000:1000 --network=jenkins \
+                            -v ${WORKSPACE}:/usr/src \
+                            sonarsource/sonar-scanner-cli:latest \
+                            -Dsonar.projectKey=openplc \
+                            -Dsonar.sources=/usr/src \
+                            -Dsonar.host.url=http://sonarqube:9000 \
+                            -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
                 }
             }
         }
