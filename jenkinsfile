@@ -220,6 +220,71 @@ pipeline {
             }
         }
 
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                script {
+                    dockerHubImage = "ericflkbg/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${dockerHubImage}"
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_PASS')]) {
+                    sh """
+                    echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin
+                    docker push ${dockerHubImage}
+                    """
+                    }
+                }
+            }
+        }
+
+        stage('Sign Docker Image (DCT)') {
+            steps {
+                script {
+                    sh """
+                    export DOCKER_CONTENT_TRUST=1
+                    docker trust sign ericflkbg/${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+        /*
+        stage('Upload Docker Trust Signature to Nexus') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh """
+                    cp ~/.docker/trust/tuf/docker.io/dockerhubusername/${IMAGE_NAME}/targets.json targets-${TIMESTAMP}.json
+                    curl -k -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file targets-${TIMESTAMP}.json \
+                    ${NEXUS_URL}/repository/docker-trust-signatures/${IMAGE_NAME}-${TIMESTAMP}.json
+                    """
+                    }
+                }
+            }
+        }
+        */
+        stage('Verify Docker Hub Image Signature') {
+            steps {
+                script {
+                    sh """
+                    export DOCKER_CONTENT_TRUST=1
+                    docker trust inspect --pretty ericflkbg/${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy OpenPLC from Docker Hub') {
+            steps {
+                script {
+                    echo "Deploying signed image from Docker Hub..."
+                    sh """
+                    docker stop openplc || true
+                    docker rm openplc || true
+                    docker run -d --name openplc --network=live-network -p 9090:8080 \
+                    ericflkbg/${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+        /*
         stage('Deploy OpenPLC') {
             steps {
                 script {
@@ -233,7 +298,7 @@ pipeline {
                 }
             }
         }
-
+        */
         stage('Deploy Prometheus') {
             steps {
                 script {
