@@ -238,13 +238,27 @@ pipeline {
         stage('Sign Docker Image (DCT)') {
             steps {
                 script {
-                    sh """
-                    export DOCKER_CONTENT_TRUST=1
-                    docker trust sign ericflkbg/${IMAGE_NAME}:${IMAGE_TAG}
-                    """
+                    withCredentials([
+                        file(credentialsId: 'docker-trust-keys-tar', variable: 'DOCKER_TRUST_KEYS'),
+                        string(credentialsId: 'docker-trust-root-pass', variable: 'DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE'),
+                        string(credentialsId: 'docker-trust-repo-pass', variable: 'DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE')
+                    ]) {
+                        sh """
+                        echo "Setting up Docker Content Trust keys..."
+                        mkdir -p ~/.docker/trust
+                        tar -xzf \$DOCKER_TRUST_KEYS -C ~/.docker/trust
+
+                        echo "Signing Docker image with Docker Content Trust..."
+                        export DOCKER_CONTENT_TRUST=1
+                        export DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE=\$DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE
+                        export DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE=\$DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE
+                        docker trust sign ericflkbg/${IMAGE_NAME}:${IMAGE_TAG}
+                        """
+                    }
                 }
             }
         }
+
         /*
         stage('Upload Docker Trust Signature to Nexus') {
             steps {
